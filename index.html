@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP CI/CD - Self Hosted Runner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Prism CSS pour la coloration syntaxique -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        /* Personnalisation légère */
+        body { font-family: 'Inter', sans-serif; }
+        .code-block { border-radius: 0.5rem; overflow: hidden; margin-top: 1rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- En-tête -->
+    <header class="bg-slate-900 text-white py-12">
+        <div class="max-w-5xl mx-auto px-6">
+            <h1 class="text-4xl font-bold mb-4">Mise en place d'un Self-Hosted Runner &amp; Déploiement Web</h1>
+            <p class="text-xl text-slate-300">Rapport de Travaux Pratiques - CI/CD GitHub Actions</p>
+            <div class="mt-6 flex items-center space-x-4">
+                <span class="bg-blue-600 text-sm px-3 py-1 rounded-full font-semibold">DevOps</span>
+                <span class="bg-green-600 text-sm px-3 py-1 rounded-full font-semibold">Debian 13</span>
+                <span class="bg-gray-600 text-sm px-3 py-1 rounded-full font-semibold">GitHub Actions</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu Principal -->
+    <main class="max-w-5xl mx-auto px-6 py-12">
+
+        <!-- Introduction -->
+        <section class="mb-12 bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+            <h2 class="text-2xl font-bold mb-4 text-slate-800 border-b pb-2">1. Objectif du Projet</h2>
+            <p class="mb-4">
+                L'objectif de ce TP était de configurer un serveur Linux (Debian 13) pour agir en tant que <strong>'Self-Hosted Runner'</strong> GitHub. Un runner est une machine dédiée à l'exécution de workflows CI/CD.
+            </p>
+            <p>
+                Contrairement aux runners hébergés par GitHub, un runner auto-hébergé permet un contrôle total sur l'environnement d'exécution (outils, accès réseau, OS). Le but final était de déployer automatiquement une page web via Nginx à chaque modification du code source sur la branche <code>master</code>.
+            </p>
+        </section>
+
+        <!-- Étapes de réalisation -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">2. Étapes de Réalisation</h2>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Etape 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">1</div>
+                    <h3 class="text-xl font-semibold mb-2">Configuration du Serveur</h3>
+                    <p class="text-slate-600">Installation de l'agent GitHub Runner sur la VM Debian 13, authentification avec un token d'accès, et configuration en tant que service système pour une exécution continue.</p>
+                </div>
+                
+                <!-- Etape 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">2</div>
+                    <h3 class="text-xl font-semibold mb-2">Tests de Communication</h3>
+                    <p class="text-slate-600">Création d'un premier workflow d'intégration continue (CI) pour valider que les commandes envoyées par GitHub s'exécutaient bien sur le serveur local.</p>
+                </div>
+
+                <!-- Etape 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">3</div>
+                    <h3 class="text-xl font-semibold mb-2">Validation du Code</h3>
+                    <p class="text-slate-600">Mise en place d'une étape de vérification automatique de la syntaxe HTML à l'aide de l'outil natif <code>tidy</code> avant tout déploiement.</p>
+                </div>
+
+                <!-- Etape 4 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">4</div>
+                    <h3 class="text-xl font-semibold mb-2">Déploiement Automatisé (CD)</h3>
+                    <p class="text-slate-600">Automatisation de l'installation de Nginx, configuration du Virtual Host et copie des fichiers de l'application vers le répertoire web <code>/var/www/site</code>.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Source -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-slate-800">3. Fichiers &amp; Workflows</h2>
+
+            <!-- Fichier 1 -->
+            <div class="mb-8">
+                <h4 class="font-semibold text-lg flex items-center gap-2">
+                    index.html (La page web)
+                </h4>
+                <div class="code-block">
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;title&gt;Lab test&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Mise en ligne&lt;/h1&gt;
+&lt;p&gt;Site de demo par CI/CD&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
+
+            <!-- Fichier 2 -->
+            <div class="mb-8">
+                <h4 class="font-semibold text-lg flex items-center gap-2">
+                    test.yml (Test du Runner)
+                </h4>
+                <div class="code-block">
+<pre><code class="language-yaml">name: Test Runner
+on:
+  push:
+    branches:
+      - master
+jobs:
+  test-runner:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Verification
+        run: echo "Test de fonctionnement du Runner !"
+      - name: tests de commandes
+        run: |
+          echo "Runner OK"
+          hostname
+          whoami
+          uname -a</code></pre>
+                </div>
+            </div>
+
+            <!-- Fichier 3 -->
+            <div class="mb-8">
+                <h4 class="font-semibold text-lg flex items-center gap-2">
+                    verif.yml (Vérification CI)
+                </h4>
+                <div class="code-block">
+<pre><code class="language-yaml">name: CI - Vérification HTML
+on:
+  push:
+    branches: [ master ]
+jobs:
+  test-html:
+    runs-on: [self-hosted, linux, x64] 
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+      - name: Installation du validateur HTML (Tidy)
+        run: sudo apt-get update &amp;&amp; sudo apt-get install -y tidy
+      - name: Vérification syntaxe HTML
+        run: tidy -q -e index.html</code></pre>
+                </div>
+            </div>
+
+            <!-- Fichier 4 -->
+            <div class="mb-8">
+                <h4 class="font-semibold text-lg flex items-center gap-2">
+                    publish.yml (Déploiement Nginx)
+                </h4>
+                <div class="code-block">
+<pre><code class="language-yaml">name: Installation et Publication de l'application
+on:
+  push:
+    branches: [ master ]
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+      - name: Installation nginx
+        run: |
+          sudo apt update
+          sudo apt install -y nginx
+          sudo mkdir -p /var/www/site
+          sudo chown -R www-data:www-data /var/www/site
+      - name: Configuration nginx
+        run: |
+          sudo tee /etc/nginx/sites-available/site &gt; /dev/null &lt;&lt;EOF
+          server {
+            listen 80;
+            server_name _;
+            root /var/www/site;
+            index index.html;
+            location / {
+              try_files \$uri \$uri/ =404;
+            }
+          }
+          EOF
+          sudo ln -sf /etc/nginx/sites-available/site /etc/nginx/sites-enabled/site
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo nginx -t
+          sudo cp index.html /var/www/site/index.html
+          sudo chown www-data:www-data /var/www/site/index.html
+      - name: Redémarrage nginx
+        run: |
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Résultats -->
+        <section class="mb-12 bg-slate-900 text-white p-8 rounded-xl shadow-md text-center">
+            <h2 class="text-2xl font-bold mb-4">4. Résultats Obtenus</h2>
+            <p class="mb-6 text-slate-300">
+                La mise en place de la chaîne d'intégration et de déploiement continu est opérationnelle. 
+                Le code poussé sur le dépôt est intercepté, analysé, et déployé sur le serveur Nginx local automatiquement.
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-slate-500">
+        <p>Travail réalisé dans le cadre du TP DevOps CI/CD - code de la page index a été reformuler par gémini pour avoir un rendu plus propre</p>
+    </footer>
+
+    <!-- Prism JS pour la coloration syntaxique -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+</body>
+</html>
